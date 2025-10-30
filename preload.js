@@ -88,6 +88,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 		let imgUrl = img.style.backgroundImage.replace("50x50.", "500x500.")
 		imgUrl = imgUrl.substring(5, imgUrl.length - 2)
 		
+		let urlObj = new URL(url.href)		
 		return {
 			playing: playButton.classList.contains("playing"),
 			duration: parseInt(progressBar.getAttribute("aria-valuemax")),
@@ -95,7 +96,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 			img: imgUrl,
 			artist: artist.innerText,
 			songName: songName.innerText,
-			url: url.href
+			url: urlObj.origin + urlObj.pathname
 		}
 	}
 	
