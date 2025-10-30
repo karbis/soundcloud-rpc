@@ -1,4 +1,4 @@
-name: Build Linux Package
+name: Compile Linux
 
 on:
   workflow_dispatch:
@@ -18,7 +18,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --save-dev electron@latest electron-builder
 
       - name: Build Linux package
         run: npm run build-linux
