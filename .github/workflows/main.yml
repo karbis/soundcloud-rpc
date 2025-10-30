@@ -18,7 +18,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install --save-dev electron@latest electron-builder
+        run: npm ci
 
       - name: Build Linux package
         run: npm run build-linux
