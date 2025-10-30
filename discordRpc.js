@@ -3,7 +3,9 @@ const { Buffer } = require("node:buffer")
 const fs = require("node:fs")
 const path = require("node:path")
 const EventEmitter = require("node:events")
+
 let socket = null
+let closed = false
 let events = new EventEmitter()
 
 let prefix = null
@@ -29,6 +31,7 @@ if (process.platform == "win32") {
 		}
 	}
 	walkThroughDir(process.env.XDG_RUNTIME_DIR ?? "/tmp/")
+	// thank you linux
 }
 
 const APPLICATION_ID = "1353759684104028314"
@@ -40,11 +43,40 @@ const OPCODE = {
 	PONG: 4
 }
 
-for (let i = 0; i < 10; i++) {
-	try {
+function createSocket() {
+	if (closed) return
+	let created = false
+	for (let i = 0; i < 10; i++) {
+		if (!fs.existsSync(prefix+i)) continue
+		created = true
 		socket = net.createConnection(prefix + i)
 		break
-	} catch { }
+	}
+	
+	if (!created) {
+		return setTimeout(createSocket, 5000)
+	}
+	
+	socket.on("data", (chunk) => {
+		let data = decodePacket(chunk)
+		
+		if (data.code == OPCODE.PING) {
+			socket.wrte(createPacket(OPCODE.PONG, data.data))
+		} else if (data.code == OPCODE.CLOSE) {
+			socket.destroy()
+		} else if (data.data.cmd == "DISPATCH" && data.data.evt == "READY") {
+			events.emit("ready")
+		}
+	})
+
+	socket.on("ready", () => {
+		socket.write(createPacket(OPCODE.HANDSHAKE, {v: 1, client_id: APPLICATION_ID}))
+	})
+	
+	socket.once("close", () => {
+		setTimeout(createSocket, 5000)
+		socket.destroy()
+	})
 }
 
 //                    Buffer
@@ -73,6 +105,7 @@ function createPacket(opCode, data) {
 
 //                 string   object
 function sendEvent(command, payload) {
+	if (!socket) return
 	socket.write(createPacket(OPCODE.FRAME, {
 		cmd: command,
 		nonce: Math.random().toString(),
@@ -80,23 +113,13 @@ function sendEvent(command, payload) {
 	}))
 }
 
-socket.on("data", (chunk) => {
-	let data = decodePacket(chunk)
-	
-	if (data.code == OPCODE.PING) {
-		sendEvent(OPCODE.PONG, data.data)
-	} else if (data.code == OPCODE.CLOSE) {
-		socket.destroy()
-	} else if (data.data.cmd == "DISPATCH" && data.data.evt == "READY") {
-		events.emit("ready")
-	}
-})
-
-socket.on("ready", () => {
-	socket.write(createPacket(OPCODE.HANDSHAKE, {v: 1, client_id: APPLICATION_ID}))
-})
+createSocket()
 
 module.exports = {
 	send: sendEvent,
-	events: events
+	events: events,
+	close: () => {
+		socket.end(createPacket(OPCODE.CLOSE, {v: 1, client_id: APPLICATION_ID}))
+		closed = true
+	}
 }

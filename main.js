@@ -1,11 +1,12 @@
-const { app, BrowserWindow, Menu } = require("electron/main")
+const { app, BrowserWindow, Menu, ipcMain } = require("electron/main")
 const path = require("node:path")
+const rpc = require("./discordRpc.js")
 
 function createWindow() {
 	let win = new BrowserWindow({
 		width: 1280,
 		height: 720,
-		title: "Soundcloud",
+		title: "SoundCloud",
 		backgroundColor: "rgb(18, 18, 18)",
 		icon: path.join(__dirname, "icons", (process.platform == "win32") ? "icon.png" : "icon.ico"),
 		
@@ -47,14 +48,17 @@ function createWindow() {
 		let contextMenu = Menu.buildFromTemplate(template)
 		contextMenu.popup()
 	})
-	
+		
 	win.setMenu(null)
 	win.loadURL("https://soundcloud.com/")
 }
 
 app.whenReady().then(() => {
-	createWindow()
+	ipcMain.on("setTitle", (event, title) => {
+		BrowserWindow.fromWebContents(event.sender).setTitle(title)
+	})
 	
+	createWindow()
 	app.on("activate", () => {
 		if (BrowserWindow.getAllWindows().length == 0) {
 			createWindow()
@@ -64,6 +68,7 @@ app.whenReady().then(() => {
 
 app.on("window-all-closed", () => {
 	if (process.platform != "darwin") {
+		rpc.close()
 		app.quit()
 	}
 })

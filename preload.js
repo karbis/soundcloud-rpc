@@ -1,4 +1,5 @@
 const rpc = require("./discordRpc.js")
+const { ipcRenderer } = require("electron")
 
 //type activity = {
 //	name: string,
@@ -102,7 +103,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 		return `${metadata.songName}_${metadata.artist}_${metadata.playing}`
 	}
 	
-	let curSong = ""
+	let curSong = null
 	let curTimeMetadata = {val: -1, timestamp: 0}
 	function update() {
 		let metadata = getSongMetadata()
@@ -131,9 +132,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 		}
 		
 		setActivity(activity)
+		ipcRenderer.send("setTitle", `${metadata.artist} - ${metadata.songName} | SoundCloud`)
 	}
 	
 	update()
+	rpc.events.once("ready", () => {
+		curSong = null
+		update()
+	})
 	let observer = new MutationObserver(update)
 	for (let target of [panel, playButton, progressBar]) {
 		observer.observe(target, {attributes: true, characterData: true, childList: true})
