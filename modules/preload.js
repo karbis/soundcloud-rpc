@@ -1,10 +1,17 @@
 const rpc = require("./discordRpc.js")
+const settings = require("./settings.js")
+const songMetadata = require("./songMetadata.js")
 const { ipcRenderer } = require("electron")
+settings.load(localStorage)
+settings.setUpIpcPreload()
 
 //type activity = {
 //	name: string,
 //	state: string?,
+//  stateUrl: string?,
+//  detailsUrl: string?,
 //	details: string,
+//	statusDisplayType: number,
 //  extraField: string?,
 //	timestamps: {current: number, end: number}?,
 //	assets: {
@@ -25,9 +32,11 @@ function setActivity(activity) {
 	let activityPayload = {
 		state: activity.state?.padEnd(2, " ")?.substring(0, 128),
 		details: activity.details?.padEnd(2, " ")?.substring(0, 128),
+		state_url: activity.stateUrl?.substring(0, 256),
+		details_url: activity.detailsUrl?.substring(0, 256),
 		name: activity.name,
 		type: 2,
-		status_display_type: 2,
+		status_display_type: activity.statusDisplayType,
 		created_at: now,
 		assets: {
 			small_image: activity.assets.image,
@@ -55,94 +64,65 @@ function setActivity(activity) {
 	rpc.send("SET_ACTIVITY", payload)
 }
 
-function waitForQuery(target, query) {
-	return new Promise(async (resolve) => {
-		if (target.querySelector(query)) { resolve(target.querySelector(query)); return }
-		let observer = new MutationObserver((records) => {
-			let controls = target.querySelector(query)
-			if (!controls) return
-			observer.disconnect()
-			resolve(controls)
-		})
-		
-		observer.observe(target, {subTree: true, childList: true, attributes: true})
-	})
-}
-
 document.addEventListener("DOMContentLoaded", async () => {
-	let controls = await waitForQuery(document.documentElement, ".playControls__elements")
-	
-	let progressBar = controls.querySelector(".playControls__timeline > div > .playbackTimeline__progressWrapper")
-	let playButton = controls.querySelector(".playControls__play")
-	
-	let panel = controls.querySelector(".playControls__soundBadge > div")
-	await waitForQuery(panel, "a > div > span")
-	
-	function getSongMetadata() {
-		let titleContext = panel.querySelector(".playbackSoundBadge__titleContextContainer")
-		let artist = titleContext.querySelector("a")
-		let url = panel.querySelector("div > a")
-		let songName = panel.querySelector("div > a > span[aria-hidden='true']")
-		let img = panel.querySelector("a > div > span")
-		
-		let imgUrl = img.style.backgroundImage.replace("50x50.", "500x500.")
-		imgUrl = imgUrl.substring(5, imgUrl.length - 2)
-		
-		let urlObj = new URL(url.href)		
-		return {
-			playing: playButton.classList.contains("playing"),
-			duration: parseInt(progressBar.getAttribute("aria-valuemax")),
-			curTime: parseInt(progressBar.getAttribute("aria-valuenow")),
-			img: imgUrl,
-			artist: artist.innerText,
-			songName: songName.innerText,
-			url: urlObj.origin + urlObj.pathname
-		}
-	}
-	
-	function getHashedMetadata(metadata) {
-		return `${metadata.songName}_${metadata.artist}_${metadata.playing}`
-	}
+	await songMetadata.init()
 	
 	let curSong = null
 	let curTimeMetadata = {val: -1, timestamp: 0}
 	function update() {
-		let metadata = getSongMetadata()
-		let hash = getHashedMetadata(metadata)
+		let metadata = songMetadata.getSongMetadata()
+		let hash = songMetadata.getHashedMetadata(metadata)
 		let shouldUpdate = curSong != hash || Math.abs(metadata.curTime - (curTimeMetadata.val + Math.floor((Date.now() - curTimeMetadata.timestamp) / 1000))) >= 3
 		
 		if (!shouldUpdate) return
 		curSong = hash
 		curTimeMetadata = {val: metadata.curTime, timestamp: Date.now()}
 		
+		if (!settings.settings.rpcEnabled) return setActivity(null)
+	
+		let settingToDisplayType = {"Song name": 2, "Song artist": 1, "SoundCloud": 0}
 		let activity = {
 			details: metadata.songName,
 			state: metadata.artist,
+			stateUrl: metadata.artistUrl,
+			detailsUrl: metadata.songUrl,
+			
+			statusDisplayType: settingToDisplayType[settings.settings.statusDisplayType],
 			name: "SoundCloud",
+			
 			assets: {
 				image: metadata.img,
 				text: metadata.songName,
-				url: metadata.url
+				url: metadata.songUrl
 			},
 		}
 		
 		if (metadata.playing) {
 			activity.timestamps = {current: metadata.curTime, end: metadata.duration}
 		} else {
-			activity.extraField = "Paused"
+			if (settings.settings.showPausedInfo) {
+				activity.extraField = "Paused"
+			} else {
+				delete activity.stateUrl
+				delete activity.detailsUrl
+				delete activity.assets.url
+				activity.assets.text = "SoundCloud"
+				activity.assets.image = "soundcloud-icon"
+				activity.details = "SoundCloud"
+				activity.state = "Paused"
+			}
 		}
 		
 		setActivity(activity)
 		ipcRenderer.send("setTitle", `${metadata.artist} - ${metadata.songName} | SoundCloud`)
 	}
 	
-	update()
-	rpc.events.once("ready", () => {
+	let forceUpdate = () => {
 		curSong = null
 		update()
-	})
-	let observer = new MutationObserver(update)
-	for (let target of [panel, playButton, progressBar]) {
-		observer.observe(target, {attributes: true, characterData: true, childList: true})
 	}
+	update()
+	rpc.events.once("ready", forceUpdate)
+	songMetadata.onSongMetadataChanged(update)
+	settings.events.on("settingChanged", forceUpdate)
 })

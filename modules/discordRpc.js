@@ -56,7 +56,7 @@ function createSocket() {
 	if (!created) {
 		return setTimeout(createSocket, 5000)
 	}
-	
+		
 	socket.on("data", (chunk) => {
 		let data = decodePacket(chunk)
 		

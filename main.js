@@ -1,6 +1,8 @@
 const { app, BrowserWindow, Menu, ipcMain } = require("electron/main")
 const path = require("node:path")
-const rpc = require("./discordRpc.js")
+const rpc = require("./modules/discordRpc.js")
+const settings = require("./modules/settings.js")
+const contextMenu = require("./modules/contextMenu.js")
 
 function createWindow() {
 	let win = new BrowserWindow({
@@ -11,7 +13,7 @@ function createWindow() {
 		icon: path.join(__dirname, "icons", (process.platform == "win32") ? "icon.png" : "icon.ico"),
 		
 		webPreferences: {
-			preload: path.join(__dirname, "preload.js"),
+			preload: path.join(__dirname, "modules", "preload.js"),
 			sandbox: false
 		}
 	})
@@ -30,23 +32,7 @@ function createWindow() {
 	})
 	
 	win.webContents.on("context-menu", (_, params) => {
-		let navigation = win.webContents.navigationHistory
-		let template = [
-			{ label: "Back", enabled: navigation.canGoBack(), click: () => navigation.goBack() },
-			{ label: "Forward", enabled: navigation.canGoForward(), click: () => navigation.goForward() },
-			{ role: "reload", accelerator: "F5" }
-		]
-		
-		if (params.selectionText != "") {
-			template.push({type: "separator"})
-			template.push({role: "copy", accelerator: "Ctrl+C"})
-		}
-		
-		template.push({type: "separator"})
-		template.push({role: "toggleDevTools", accelerator: "Ctrl+Shift+I", label: "Inspect"})
-		
-		let contextMenu = Menu.buildFromTemplate(template)
-		contextMenu.popup()
+		contextMenu.popup(win, params)
 	})
 		
 	win.setMenu(null)
@@ -57,6 +43,7 @@ app.whenReady().then(() => {
 	ipcMain.on("setTitle", (event, title) => {
 		BrowserWindow.fromWebContents(event.sender).setTitle(title)
 	})
+	settings.setUpIpcMain()
 	
 	createWindow()
 	app.on("activate", () => {
