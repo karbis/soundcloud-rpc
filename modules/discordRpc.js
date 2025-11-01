@@ -61,7 +61,7 @@ function createSocket() {
 		let data = decodePacket(chunk)
 		
 		if (data.code == OPCODE.PING) {
-			socket.wrte(createPacket(OPCODE.PONG, data.data))
+			socket.write(createPacket(OPCODE.PONG, data.data))
 		} else if (data.code == OPCODE.CLOSE) {
 			socket.destroy()
 		} else if (data.data.cmd == "DISPATCH" && data.data.evt == "READY") {
