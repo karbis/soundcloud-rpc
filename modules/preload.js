@@ -74,11 +74,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 		let hash = songMetadata.getHashedMetadata(metadata)
 		let shouldUpdate = curSong != hash || Math.abs(metadata.curTime - (curTimeMetadata.val + Math.floor((Date.now() - curTimeMetadata.timestamp) / 1000))) >= 3
 		
+		let rpcEnabled = settings.settings.rpcEnabled
+		if (curSong == null && !rpcEnabled) {
+			shouldUpdate = false
+		}
+		
 		if (!shouldUpdate) return
 		curSong = hash
 		curTimeMetadata = {val: metadata.curTime, timestamp: Date.now()}
 		
-		if (!settings.settings.rpcEnabled) return setActivity(null)
+		if (!rpcEnabled) {
+			curSong = null
+			setActivity(null)
+			return
+		}
 	
 		let settingToDisplayType = {"Song name": 2, "Song artist": 1, "SoundCloud": 0}
 		let activity = {
@@ -118,7 +127,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 	}
 	
 	let forceUpdate = () => {
-		curSong = null
+		curSong = ""
 		update()
 	}
 	update()
