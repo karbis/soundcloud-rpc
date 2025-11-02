@@ -120,7 +120,9 @@ module.exports = {
 	send: sendEvent,
 	events: events,
 	close: () => {
-		socket.end(createPacket(OPCODE.CLOSE, {v: 1, client_id: APPLICATION_ID}))
+		if (socket) {
+			socket.end(createPacket(OPCODE.CLOSE, {v: 1, client_id: APPLICATION_ID}))
+		}
 		closed = true
 	}
 }
