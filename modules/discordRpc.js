@@ -64,7 +64,7 @@ function createSocket() {
 		if (data.code == OPCODE.PING) {
 			socket.write(createPacket(OPCODE.PONG, data.data))
 		} else if (data.code == OPCODE.CLOSE) {
-			socket.end(createPacket(OPCODE.CLOSE, {v: 1, client_id: APPLICATION_ID}))
+			socket.destroy()
 		} else if (data.data.cmd == "DISPATCH" && data.data.evt == "READY") {
 			events.emit("ready")
 		}
