@@ -1,11 +1,12 @@
 const { app, BrowserWindow, Menu, ipcMain } = require("electron/main")
 const path = require("node:path")
-const rpc = require("./modules/discordRpc.js")
 const settings = require("./modules/settings.js")
 const contextMenu = require("./modules/contextMenu.js")
+const rpc = require("./modules/discordRpc.js")
+let win = null
 
 function createWindow() {
-	let win = new BrowserWindow({
+	win = new BrowserWindow({
 		width: 1280,
 		height: 720,
 		title: "SoundCloud",
@@ -43,6 +44,9 @@ app.whenReady().then(() => {
 	ipcMain.on("setTitle", (event, title) => {
 		BrowserWindow.fromWebContents(event.sender).setTitle(title)
 	})
+	ipcMain.on("rpcSend", (_, ...args) => {
+		rpc.send(...args)
+	})
 	settings.setUpIpcMain()
 	
 	createWindow()
@@ -58,4 +62,9 @@ app.on("window-all-closed", () => {
 		rpc.close()
 		app.quit()
 	}
+})
+
+rpc.events.on("ready", () => {
+	if (!win || win.isDestroyed()) return
+	win.webContents.send("rpcReady")
 })

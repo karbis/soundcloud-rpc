@@ -8,6 +8,15 @@ let socket = null
 let closed = false
 let events = new EventEmitter()
 
+const APPLICATION_ID = "1353759684104028314"
+const OPCODE = {
+	HANDSHAKE: 0,
+	FRAME: 1,
+	CLOSE: 2,
+	PING: 3,
+	PONG: 4
+}
+
 let prefix = null
 if (process.platform == "win32") {
 	prefix = "\\\\?\\pipe\\discord-ipc-"
@@ -34,17 +43,9 @@ if (process.platform == "win32") {
 	// thank you linux
 }
 
-const APPLICATION_ID = "1353759684104028314"
-const OPCODE = {
-	HANDSHAKE: 0,
-	FRAME: 1,
-	CLOSE: 2,
-	PING: 3,
-	PONG: 4
-}
-
 function createSocket() {
 	if (closed) return
+	
 	let created = false
 	for (let i = 0; i < 10; i++) {
 		if (!fs.existsSync(prefix+i)) continue
@@ -63,7 +64,7 @@ function createSocket() {
 		if (data.code == OPCODE.PING) {
 			socket.write(createPacket(OPCODE.PONG, data.data))
 		} else if (data.code == OPCODE.CLOSE) {
-			socket.destroy()
+			socket.end(createPacket(OPCODE.CLOSE, {v: 1, client_id: APPLICATION_ID}))
 		} else if (data.data.cmd == "DISPATCH" && data.data.evt == "READY") {
 			events.emit("ready")
 		}
@@ -72,7 +73,7 @@ function createSocket() {
 	socket.on("ready", () => {
 		socket.write(createPacket(OPCODE.HANDSHAKE, {v: 1, client_id: APPLICATION_ID}))
 	})
-	
+		
 	socket.once("close", () => {
 		setTimeout(createSocket, 5000)
 		socket.destroy()
@@ -91,7 +92,7 @@ function decodePacket(packet) {
 	}
 }
 
-//                  number    object
+//                    number  object
 function createPacket(opCode, data) {
 	let json = JSON.stringify(data)
 	let length = (new Blob([json])).size

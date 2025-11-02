@@ -1,4 +1,3 @@
-const rpc = require("./discordRpc.js")
 const settings = require("./settings.js")
 const songMetadata = require("./songMetadata.js")
 const { ipcRenderer } = require("electron")
@@ -14,6 +13,7 @@ settings.setUpIpcPreload()
 //	statusDisplayType: number,
 //  extraField: string?,
 //	timestamps: {current: number, end: number}?,
+//	button: {label: string, url: string}?,
 //	assets: {
 //		image: string,
 //		text: string,
@@ -22,7 +22,7 @@ settings.setUpIpcPreload()
 //}
 function setActivity(activity) {
 	if (activity == null) {
-		return rpc.send("SET_ACTIVITY", {pid: process.pid})
+		return ipcRenderer.send("rpcSend", "SET_ACTIVITY", {pid: process.pid})
 	}
 	
 	let now = Date.now()
@@ -42,8 +42,7 @@ function setActivity(activity) {
 			small_image: activity.assets.image,
 			small_text: activity.assets.text,
 			small_url: activity.assets.url
-		},
-		instance: true
+		}
 	}
 	
 	if (activity.timestamps) {
@@ -56,12 +55,15 @@ function setActivity(activity) {
 			large_url: activity.assets.url
 		}
 	}
+	if (activity.button) {
+		activityPayload.buttons = [{label: activity.button.label, url: activity.button.url.substring(0, 512)}]
+	}
 	
 	let payload = {
 		pid: process.pid,
 		activity: activityPayload
 	}
-	rpc.send("SET_ACTIVITY", payload)
+	ipcRenderer.send("rpcSend", "SET_ACTIVITY", payload)
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -106,15 +108,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 			},
 		}
 		
+		if (settings.settings.showButtons) {
+			activity.button = {label: "Listen on SoundCloud", url: metadata.songUrl}
+		}
+		
 		if (metadata.playing) {
 			activity.timestamps = {current: metadata.curTime, end: metadata.duration}
-		} else {
+		} else {			
 			if (settings.settings.showPausedInfo) {
 				activity.extraField = "Paused"
 			} else {
 				delete activity.stateUrl
 				delete activity.detailsUrl
 				delete activity.assets.url
+				delete activity.button
+				activity.statusDisplayType = 0
 				activity.assets.text = "SoundCloud"
 				activity.assets.image = "soundcloud-icon"
 				activity.details = "SoundCloud"
@@ -131,7 +139,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 		update()
 	}
 	update()
-	rpc.events.once("ready", forceUpdate)
+	ipcRenderer.on("rpcReady", forceUpdate)
 	songMetadata.onSongMetadataChanged(update)
 	settings.events.on("settingChanged", forceUpdate)
 })
