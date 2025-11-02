@@ -30,5 +30,6 @@
     }
   },
   "author": {"name": "John Doe", "email": "johndoe@example.com"},
-  "homepage": "www.google.com"
+  "homepage": "www.google.com",
+  "description": "SoundCloud RPC"
 }
