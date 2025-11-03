@@ -78,6 +78,7 @@ function createSocket() {
 		setTimeout(createSocket, 5000)
 		socket.destroy()
 	})
+	socket.on("error", () => {})
 }
 
 //                    Buffer
