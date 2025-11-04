@@ -11,7 +11,7 @@ function createWindow() {
 		height: 720,
 		title: "SoundCloud",
 		backgroundColor: "rgb(18, 18, 18)",
-		icon: path.join(__dirname, "icons", (process.platform == "win32") ? "icon.png" : "icon.ico"),
+		icon: path.join(__dirname, "icons", (process.platform == "win32") ? "icon.ico" : "icon.png"),
 		
 		webPreferences: {
 			preload: path.join(__dirname, "modules", "preload.js"),
@@ -36,6 +36,10 @@ function createWindow() {
 		contextMenu.popup(win, params)
 	})
 		
+	let userAgent = win.webContents.userAgent
+	userAgent = userAgent.replace(/(soundcloud-rpc\/.+) /g, "").replace(/(Electron\/.+) /g, "")
+	win.webContents.userAgent = userAgent
+	
 	win.setMenu(null)
 	win.loadURL("https://soundcloud.com/")
 }

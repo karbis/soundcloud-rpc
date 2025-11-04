@@ -3,6 +3,7 @@ const EventEmitter = require("node:events")
 
 let settingsInfo = [
 	{name: "rpcEnabled", displayName: "RPC enabled", type: "boolean", default: true},
+	{name: "pausedRpc", displayName: "Show RPC when paused", type: "boolean", default: true},
 	{name: "showPausedInfo", displayName: "Show song info when paused", type: "boolean", default: true},
 	{name: "showButtons", displayName: "Show buttons on activity", type: "boolean", default: false},
 	{name: "statusDisplayType", displayName: "Status display type", type: "select", default: "Song name", values: ["Song name", "Song artist", "SoundCloud"]}

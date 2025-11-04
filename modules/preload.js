@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 		let hash = songMetadata.getHashedMetadata(metadata)
 		let shouldUpdate = curSong != hash || Math.abs(metadata.curTime - (curTimeMetadata.val + Math.floor((Date.now() - curTimeMetadata.timestamp) / 1000))) >= 3
 		
-		let rpcEnabled = settings.settings.rpcEnabled
+		let rpcEnabled = settings.settings.rpcEnabled && (settings.settings.pausedRpc || metadata.playing)
 		if (curSong == null && !rpcEnabled) {
 			shouldUpdate = false
 		}
