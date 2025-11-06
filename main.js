@@ -37,7 +37,7 @@ function createWindow() {
 	})
 		
 	let userAgent = win.webContents.userAgent
-	userAgent = userAgent.replace(/(soundcloud-rpc\/.+) /g, "").replace(/(Electron\/.+) /g, "")
+	userAgent = userAgent.replace(/(soundcloud-rpc\/.+?) /g, "").replace(/(Electron\/.+?) /g, "")
 	win.webContents.userAgent = userAgent
 	
 	win.setMenu(null)
