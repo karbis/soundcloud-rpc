@@ -70,6 +70,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 	await songMetadata.init()
 	
 	let curSong = null
+	let curTitleMetadata = null
 	let curTimeMetadata = {val: -1, timestamp: 0}
 	function update() {
 		let metadata = songMetadata.getSongMetadata()
@@ -81,10 +82,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 			shouldUpdate = false
 		}
 		
+		if (curTitleMetadata != hash) {
+			ipcRenderer.send("setTitle", `${metadata.artist} - ${metadata.songName} | SoundCloud`)
+			curTitleMetadata = hash
+		}
+		
 		if (!shouldUpdate) return
 		curSong = hash
 		curTimeMetadata = {val: metadata.curTime, timestamp: Date.now()}
-		
+				
 		if (!rpcEnabled) {
 			curSong = null
 			setActivity(null)
@@ -131,7 +137,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 		}
 		
 		setActivity(activity)
-		ipcRenderer.send("setTitle", `${metadata.artist} - ${metadata.songName} | SoundCloud`)
 	}
 	
 	let forceUpdate = () => {
