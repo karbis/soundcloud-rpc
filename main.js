@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, ipcMain } = require("electron/main")
+const { app, BrowserWindow, Menu, ipcMain, session } = require("electron/main")
 const path = require("node:path")
 const settings = require("./modules/settings.js")
 const contextMenu = require("./modules/contextMenu.js")
@@ -39,6 +39,11 @@ function createWindow() {
 	let userAgent = win.webContents.userAgent
 	userAgent = userAgent.replace(/(soundcloud-rpc\/.+?) /g, "").replace(/(Electron\/.+?) /g, "")
 	win.webContents.userAgent = userAgent
+	
+	session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+		details.requestHeaders["Accept-Language"] = 'en,en-US'
+		callback({requestHeaders: details.requestHeaders})
+	})
 	
 	win.setMenu(null)
 	win.loadURL("https://soundcloud.com/")
