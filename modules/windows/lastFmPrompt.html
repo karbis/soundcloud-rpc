@@ -1,0 +1,29 @@
+<h2>Last.fm keys</h2>
+<label for="apiKey">API key</label>
+<input id="apiKey">
+<br>
+<label for="secret">Shared secret</label>
+<input id="secret">
+<br>
+<button id="confirm">Confirm</button>
+
+<script>
+	let processInput = (input) => ((input == "") ? null : input)
+
+	;(async () => {
+		let apiKey = await window.preload.getSetting("lastFm_apiKey")
+		let secret = await window.preload.getSetting("lastFm_secret")
+		if (apiKey) {
+			document.getElementById("apiKey").value = apiKey
+		}
+		if (secret) {
+			document.getElementById("secret").value = secret
+		}
+	})()
+
+	document.getElementById("confirm").onclick = () => {
+		window.preload.setSetting("lastFm_apiKey", processInput(document.getElementById("apiKey").value))
+		window.preload.setSetting("lastFm_secret", processInput(document.getElementById("secret").value))
+		window.preload.close()
+	}
+</script>

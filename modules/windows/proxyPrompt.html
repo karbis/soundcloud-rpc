@@ -1,0 +1,21 @@
+<h2>Proxy URL</h2>
+<label for="url">Proxy URL</label>
+<input id="url">
+<br>
+<button id="confirm">Confirm</button>
+
+<script>
+	let processInput = (input) => ((input == "") ? null : input)
+	let urlElement = document.getElementById("url")
+	
+	;(async () => {
+		let result = await window.preload.getSetting("proxy_url")
+		if (!result) return
+		urlElement.value = result
+	})()
+
+	document.getElementById("confirm").onclick = () => {
+		window.preload.setSetting("proxy_url", processInput(urlElement.value))
+		window.preload.close()
+	}
+</script>

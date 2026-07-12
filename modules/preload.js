@@ -1,8 +1,11 @@
 const settings = require("./settings.js")
 const songMetadata = require("./songMetadata.js")
+const lastFm = require("./lastFm.js")
 const { ipcRenderer } = require("electron")
 settings.load(localStorage)
 settings.setUpIpcPreload()
+lastFm.init()
+if (settings.settings.proxy_rawBytesToSearch) require("./rawBytesToSearch") // dev stuff
 
 //type activity = {
 //	name: string,

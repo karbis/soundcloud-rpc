@@ -1,8 +1,9 @@
-const { app, BrowserWindow, Menu, ipcMain, session } = require("electron/main")
+const { app, BrowserWindow, Menu, ipcMain, session, components } = require("electron/main")
 const path = require("node:path")
 const settings = require("./modules/settings.js")
 const contextMenu = require("./modules/contextMenu.js")
 const rpc = require("./modules/discordRpc.js")
+const proxy = require("./modules/proxy.js")
 let win = null
 
 function createWindow() {
@@ -41,21 +42,24 @@ function createWindow() {
 	win.webContents.userAgent = userAgent
 	
 	session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
-		details.requestHeaders["Accept-Language"] = 'en,en-US'
+		details.requestHeaders["Accept-Language"] = "en,en-US"
 		callback({requestHeaders: details.requestHeaders})
 	})
+	proxy.init()
 	
 	win.setMenu(null)
 	win.loadURL("https://soundcloud.com/")
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+	await components.whenReady() // widevine
 	ipcMain.on("setTitle", (event, title) => {
 		BrowserWindow.fromWebContents(event.sender).setTitle(title)
 	})
 	ipcMain.on("rpcSend", (_, ...args) => {
 		rpc.send(...args)
 	})
+	ipcMain.on("closeWindow", (win) => win.sender.close())
 	settings.setUpIpcMain()
 	
 	createWindow()

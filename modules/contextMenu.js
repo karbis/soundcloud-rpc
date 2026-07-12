@@ -1,5 +1,7 @@
 const { Menu, clipboard } = require("electron/main")
 const settings = require("./settings.js")
+const lastFm = require("./lastFm.js")
+const proxy = require("./proxy.js")
 
 function contextMenuPopup(win, params) {
 	let navigation = win.webContents.navigationHistory
@@ -29,9 +31,17 @@ function contextMenuPopup(win, params) {
 	contextMenu.popup()
 }
 
-function getSettingsSubMenu() {
-	let menu = []
+	
+function getSettingInfo(name) {
 	for (let setting of settings.info) {
+		if (setting.name == name) {
+			return setting
+		}
+	}
+}
+
+function getSettingsSubMenu() {
+	let newSetting = (setting) => {
 		let item = {label: setting.displayName}
 		let curVal = settings.settings[setting.name]
 		
@@ -48,8 +58,37 @@ function getSettingsSubMenu() {
 			item.submenu = subMenu
 		}
 		
-		menu.push(item)
+		return item
 	}
+	
+	let menu = []
+	for (let setting of settings.info) {
+		if (setting.internal) continue
+		menu.push(newSetting(setting))
+	}
+	
+	menu.push({type: "separator"})
+	menu.push({label: "Last.fm settings", submenu: [
+		{
+			label: "Set API keys",
+			click: (_, win) => lastFm.promptWithApiKeys(win),
+		},
+		{
+			label: "Connect account",
+			click: (_, win) => lastFm.connectAccount(win),
+			type: "checkbox",
+			checked: lastFm.isAccountConnected()
+		},
+		{type: "separator"},
+		newSetting(getSettingInfo("lastFm_scrobbling"))
+	]})
+	menu.push({label: "Proxy settings", submenu: [
+		{
+			label: "Set Proxy URL",
+			click: (_, win) => proxy.promptUrlChange(win)
+		},
+		newSetting(getSettingInfo("proxy_enabled"))
+	]})
 	
 	return menu
 }

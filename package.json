@@ -1,16 +1,17 @@
 {
   "devDependencies": {
-    "electron": "^39.0.0",
+    "electron": "github:castlabs/electron-releases#v41.1.1+wvcus",
     "electron-builder": "^26.0.12"
   },
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder",
-	"build-linux": "electron-builder -l"
+    "build": "electron-builder && python -m castlabs_evs.vmp sign-pkg build/win-unpacked",
+    "build-unsigned": "electron-builder",
+    "build-linux": "electron-builder -l"
   },
   "name": "soundcloud-rpc",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "build": {
     "appId": "com.notsoundcloud.soundcloud",
     "productName": "SoundCloud",
@@ -27,9 +28,15 @@
       "target": "deb",
       "icon": "icons/icon.png",
       "artifactName": "soundcloud-linux.${ext}"
+    },
+    "electronDownload": {
+      "mirror": "https://github.com/castlabs/electron-releases/releases/download/v"
     }
   },
-  "author": {"name": "John Doe", "email": "johndoe@example.com"},
+  "author": {
+    "name": "John Doe",
+    "email": "johndoe@example.com"
+  },
   "homepage": "www.google.com",
   "description": "SoundCloud RPC"
 }

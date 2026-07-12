@@ -46,6 +46,7 @@ function getSongMetadata() {
 		artist: artist.innerText,
 		songName: songName.innerText,
 		songUrl: songUrl.origin + songUrl.pathname,
+		songUrlFull: url.href,
 		artistUrl: artistUrl.origin + artistUrl.pathname
 	}
 }
