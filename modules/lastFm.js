@@ -87,6 +87,31 @@ function getLastFmSignature(args) {
 }
 
 async function fetchAlbum(metadata) {
+	return fetchLastFmAlbum(metadata) ?? fetchSoundcloudAlbum(metadata)
+}
+
+// method 1 (via lastfm)
+async function fetchLastFmAlbum(metadata) {
+	let albumRequest = null
+	try {
+		albumRequest = await sendLastFmRequest("GET", "track.getInfo", {
+			track: metadata.songName,
+			artist: metadata.artist.replaceAll(/\p{C}/gu, "") // remove invisible characters
+		}, false)
+	} catch {
+		return null
+	}
+	
+	let albumData = await albumRequest.json()
+	if (!albumData.track) return null
+	if (!albumData.track.album) return null
+	if (albumData.track.name.toLowerCase() == albumData.track.album.title.toLowerCase()) return null // probably a single
+	
+	return albumData.track.album.title
+}
+
+// method 2 (via soundcloud)
+async function fetchSoundcloudAlbum(metadata) {
 	let urlData = new URL(metadata.songUrlFull)
 	if (!urlData.searchParams.has("in")) return null
 	if (urlData.searchParams.get("in").split("/")[0] != new URL(metadata.artistUrl).pathname.substring(1)) return null // playlist check
