@@ -87,7 +87,7 @@ function getLastFmSignature(args) {
 }
 
 async function fetchAlbum(metadata) {
-	return fetchLastFmAlbum(metadata) ?? fetchSoundcloudAlbum(metadata)
+	return (await fetchSoundcloudAlbum(metadata)) ?? (await fetchLastFmAlbum(metadata))
 }
 
 // method 1 (via lastfm)
