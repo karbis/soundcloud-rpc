@@ -24,7 +24,7 @@ jobs:
         run: npm ci
 
       - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y bsdtar
+        run: sudo apt-get update && sudo apt-get install -y libarchive-tools
 
       - name: Build Linux package
         run: npm run build-linux
