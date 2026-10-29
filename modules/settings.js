@@ -8,6 +8,9 @@ let settingsInfo = [
 	{name: "showButtons", displayName: "Show buttons on activity", type: "boolean", default: false},
 	{name: "statusDisplayType", displayName: "Status display type", type: "select", default: "Song name", values: ["Song name", "Song artist", "SoundCloud"]},
 	
+	{name: "playbackRate", displayName: "Playback rate", type: "number", default: 1, internal: true},
+	{name: "playbackRate_preservePitch", displayName: "Preserve pitch", type: "boolean", default: true, internal: true},
+	
 	{name: "lastFm_apiKey", type: "string", default: null, internal: true},
 	{name: "lastFm_secret", type: "string", default: null, internal: true},
 	{name: "lastFm_session", type: "string", default: null, internal: true},
@@ -33,6 +36,8 @@ function load(storage) {
 			val = storageVal == "true"
 		} else if (storageVal == "null" || storageVal == "undefined") {
 			val = null
+		} else if (!isNaN(parseFloat(storageVal))) {
+			val = parseFloat(storageVal)
 		} else {
 			val = storageVal
 		}

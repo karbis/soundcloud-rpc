@@ -1,0 +1,40 @@
+<h2>Playback rate</h2>
+<input type="range" id="speed" name="speed" min="0.5" max="2" step="0.05"/>
+<input type="number" id="speedNum" name="speedNum" min="0.5" max="2" step="0.05" style="width: 4em"/>
+<label for="speedNum">x</label>
+<br>
+<input type="checkbox" id="preservePitch" name="pitch"/>
+<label for="pitch">Preserve pitch</label>
+<br>
+<br>
+<button id="confirm">Confirm</button>
+
+<script>
+	let rateSlider = document.getElementById("speed")
+	let rateNum = document.getElementById("speedNum")
+	let pitchBox = document.getElementById("preservePitch")
+	
+	;(async () => {
+		rateNum.value = await window.preload.getSetting("playbackRate")
+		rateSlider.value = rateNum.value
+		pitchBox.checked = await window.preload.getSetting("playbackRate_preservePitch")
+	})()
+	
+	rateSlider.oninput = () => {
+		rateNum.value = rateSlider.value
+		window.preload.setSetting("playbackRate", rateSlider.value)
+	}
+	
+	rateNum.onchange = () => {
+		rateSlider.value = rateNum.value
+		window.preload.setSetting("playbackRate", rateNum.value)
+	}
+	
+	pitchBox.onchange = () => {
+		window.preload.setSetting("playbackRate_preservePitch", pitchBox.checked)
+	}
+
+	document.getElementById("confirm").onclick = async () => {
+		window.preload.close()
+	}
+</script>

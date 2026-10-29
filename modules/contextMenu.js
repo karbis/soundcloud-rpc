@@ -2,6 +2,7 @@ const { Menu, clipboard } = require("electron/main")
 const settings = require("./settings.js")
 const lastFm = require("./lastFm.js")
 const proxy = require("./proxy.js")
+const playbackRate = require("./playbackRate.js")
 
 function contextMenuPopup(win, params) {
 	let navigation = win.webContents.navigationHistory
@@ -67,6 +68,7 @@ function getSettingsSubMenu() {
 		menu.push(newSetting(setting))
 	}
 	
+	menu.push({label: "Playback rate", click: (_, win) => playbackRate.promptSetting(win)})
 	menu.push({type: "separator"})
 	menu.push({label: "Last.fm settings", submenu: [
 		{

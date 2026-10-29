@@ -1,10 +1,12 @@
 const settings = require("./settings.js")
 const songMetadata = require("./songMetadata.js")
 const lastFm = require("./lastFm.js")
+const playbackRate = require("./playbackRate.js")
 const { ipcRenderer } = require("electron")
 settings.load(localStorage)
 settings.setUpIpcPreload()
 lastFm.init()
+playbackRate.init()
 if (settings.settings.proxy_rawBytesToSearch) require("./rawBytesToSearch") // dev stuff
 
 //type activity = {
@@ -77,8 +79,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 	let curTimeMetadata = {val: -1, timestamp: 0}
 	function update() {
 		let metadata = songMetadata.getSongMetadata()
-		let hash = songMetadata.getHashedMetadata(metadata)
-		let shouldUpdate = curSong != hash || Math.abs(metadata.curTime - (curTimeMetadata.val + Math.floor((Date.now() - curTimeMetadata.timestamp) / 1000))) >= 3
+		let playbackRate = settings.settings.playbackRate
+		let hash = songMetadata.getHashedMetadata(metadata) + `_{playbackRate}`
+		let shouldUpdate = curSong != hash || Math.abs(metadata.curTime - (curTimeMetadata.val + Math.floor((Date.now() - curTimeMetadata.timestamp) / 1000 * playbackRate))) >= 3
 		
 		let rpcEnabled = settings.settings.rpcEnabled && (settings.settings.pausedRpc || metadata.playing)
 		if (curSong == null && !rpcEnabled) {
@@ -122,7 +125,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 		}
 		
 		if (metadata.playing) {
-			activity.timestamps = {current: metadata.curTime, end: metadata.duration}
+			activity.timestamps = {current: metadata.curTime / playbackRate, end: metadata.duration / playbackRate}
 		} else {			
 			if (settings.settings.showPausedInfo) {
 				activity.extraField = "Paused"

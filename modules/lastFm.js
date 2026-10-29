@@ -228,7 +228,7 @@ async function init() {
 		if (!metadata.playing) return
 		
 		let curTime = metadata.curTime
-		if (curTime - lastCurTime != 1 && curTime - lastCurTime != 0) {
+		if (Math.abs(curTime - lastCurTime) > 1) {
 			listeningTime = 0
 			
 			if (curTime == 0) {
@@ -260,5 +260,6 @@ module.exports = {
 	connectAccount,
 	isAccountConnected,
 	apiKeysSetUp,
-	init
+	init,
+	promptWindow
 }
