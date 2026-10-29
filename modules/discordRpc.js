@@ -17,10 +17,14 @@ const OPCODE = {
 	PONG: 4
 }
 
-let prefix = null
-if (process.platform == "win32") {
-	prefix = "\\\\?\\pipe\\discord-ipc-"
-} else {
+function getPrefix() {
+	if (process.platform == "win32") {
+		return "\\\\?\\pipe\\discord-ipc-"
+	}
+	if (process.env.XDG_RUNTIME_DIR && fs.existsSync(path.join(process.env.XDG_RUNTIME_DIR, "discord-ipc-0"))) {
+		return path.join(process.env.XDG_RUNTIME_DIR, "discord-ipc-")
+	}
+	
 	let walkThroughDir = (dir) => {
 		for (let file of fs.readdirSync(dir, {withFileTypes: true})) {
 			if (prefix) break
@@ -34,14 +38,17 @@ if (process.platform == "win32") {
 			}
 			
 			if (file.name.startsWith("discord-ipc-")) {
-				prefix = fullPath.substring(0, fullPath.length - 1)
-				break
+				return fullPath.substring(0, fullPath.length - 1)
 			}
 		}
 	}
 	walkThroughDir(process.env.XDG_RUNTIME_DIR ?? "/tmp/")
 	// thank you linux
+	
+	return null
 }
+
+let prefix = getPrefix()
 
 function createSocket() {
 	if (closed) return
