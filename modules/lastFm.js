@@ -4,14 +4,22 @@ const { BrowserWindow } = require("electron")
 const path = require("node:path")
 const crypto = require("node:crypto")
 
-function promptWithApiKeys(win) {
-	let prompt = new BrowserWindow({parent: win, modal: true, show: false, title: "API Keys", width: 300, height: 190, resizable: false, webPreferences: {
+function promptWindow(win, title, fileName, width, height) {
+	let prompt = new BrowserWindow({parent: win, modal: true, show: false, title: title, width: width, height: height, resizable: false, webPreferences: {
 		preload: path.join(__dirname, "windows", "promptPreload.js"),
 		sandbox: false
 	}})
 	prompt.setMenu(null)
-	prompt.loadFile("modules/windows/lastFmPrompt.html")
+	prompt.loadFile(`modules/windows/${fileName}.html`)
 	prompt.once("ready-to-show", () => prompt.show())
+}
+
+function promptWithApiKeys(win) {
+	promptWindow(win, "API Keys", "lastFmPrompt", 300, 190)
+}
+
+function promptCorrector(win) {
+	promptWindow(win, "Scrobble Corrector", "scrobbleCorrector", 450, 250)
 }
 
 async function connectAccount(win) {
@@ -125,7 +133,7 @@ async function fetchSoundcloudAlbum(metadata) {
 	
 	let pageText = await pageRequest.text()
 	let pageDom = (new DOMParser()).parseFromString(pageText, "text/html")
-	let startStr = `Listen to ${metadata.songName} by ${metadata.artist} `
+	let startStr = `Listen to ${metadata.originalSongName} by ${metadata.originalArtist} `
 	let titleCutoff = pageDom.title.substring(startStr.length)
 	let matchResult = titleCutoff.match(/^in (.+) playlist/)
 	
@@ -145,6 +153,16 @@ async function fetchSoundcloudAlbum(metadata) {
 	}
 }
 
+function getSongMetadata(correctionData) {
+	let metadata = songMetadata.getSongMetadata()
+	metadata.originalSongName = metadata.songName
+	metadata.originalArtist = metadata.artist
+	metadata.songName = correctionData.songName[metadata.songName] ?? metadata.songName
+	metadata.artist = correctionData.artist[metadata.artist] ?? metadata.artist
+	
+	return metadata
+}
+
 async function init() {
 	await new Promise((r) => document.addEventListener("DOMContentLoaded", r))
 	await songMetadata.init()
@@ -155,6 +173,7 @@ async function init() {
 	let lastHash = null
 	let lastCurTime = 0
 	let startedListening = null
+	let cachedCorrectionData = JSON.parse(settings.settings.lastFm_correctorData)
 	
 	async function checkScrobble() {
 		let scrobble = pendingScrobble
@@ -195,7 +214,7 @@ async function init() {
 	songMetadata.onSongMetadataChanged(() => {
 		if (!isAccountConnected()) return
 		if (!settings.settings.lastFm_scrobbling) return
-		let metadata = songMetadata.getSongMetadata()
+		let metadata = getSongMetadata(cachedCorrectionData)
 		
 		let curHash = getHash(metadata)
 		if (curHash != lastHash)  {
@@ -229,10 +248,15 @@ async function init() {
 			pendingScrobble = metadata
 		}
 	})
+	
+	settings.events.on("settingChanged", () => {
+		cachedCorrectionData = JSON.parse(settings.settings.lastFm_correctorData)
+	})
 }
 
 module.exports = {
 	promptWithApiKeys,
+	promptCorrector,
 	connectAccount,
 	isAccountConnected,
 	apiKeysSetUp,

@@ -8,8 +8,6 @@
 <button id="confirm">Confirm</button>
 
 <script>
-	let processInput = (input) => ((input == "") ? null : input)
-
 	;(async () => {
 		let apiKey = await window.preload.getSetting("lastFm_apiKey")
 		let secret = await window.preload.getSetting("lastFm_secret")
@@ -22,8 +20,8 @@
 	})()
 
 	document.getElementById("confirm").onclick = () => {
-		window.preload.setSetting("lastFm_apiKey", processInput(document.getElementById("apiKey").value))
-		window.preload.setSetting("lastFm_secret", processInput(document.getElementById("secret").value))
+		window.preload.setSetting("lastFm_apiKey", document.getElementById("apiKey").value)
+		window.preload.setSetting("lastFm_secret", document.getElementById("secret").value)
 		window.preload.close()
 	}
 </script>

@@ -1,0 +1,57 @@
+<h2>Scrobble corrector</h2>
+<select id="correctionType">
+	<option value="artist">Artist name</option>
+	<option value="songName">Song name</option>
+</select>
+<br>
+<textarea id="correctionList" style="resize: none" placeholder="old name=new name&#10;old name 2=newer name" rows="5" cols="50" spellcheck="false"></textarea>
+<br>
+<br>
+<button id="confirm">Confirm</button>
+
+<script>
+	let correctionType = document.getElementById("correctionType")
+	let textArea = document.getElementById("correctionList")
+	let curType = correctionType.value
+
+	async function getSavedData() {
+		return JSON.parse(await window.preload.getSetting("lastFm_correctorData"))
+	}
+	
+	async function updateList() {
+		let data = await getSavedData()
+		curType = correctionType.value
+		
+		let values = []
+		Object.entries(data[curType]).forEach(([i, v]) => {
+			values.push(`${i}=${v}`)
+		})
+		textArea.value = values.join("\n")
+	}
+	
+	async function save() {
+		let data = await getSavedData()
+		
+		let values = {}
+		textArea.value.split("\n").forEach((line) => {
+			let split = line.split("=")
+			if (split.length != 2) return
+			
+			values[split[0]] = split[1]
+		})
+		data[curType] = values
+		
+		await window.preload.setSetting("lastFm_correctorData", JSON.stringify(data))
+	}
+
+	updateList()
+	correctionType.onchange = async () => {
+		await save()
+		updateList()
+	}
+
+	document.getElementById("confirm").onclick = async () => {
+		await save()
+		window.preload.close()
+	}
+</script>

@@ -5,7 +5,6 @@
 <button id="confirm">Confirm</button>
 
 <script>
-	let processInput = (input) => ((input == "") ? null : input)
 	let urlElement = document.getElementById("url")
 	
 	;(async () => {
@@ -15,7 +14,7 @@
 	})()
 
 	document.getElementById("confirm").onclick = () => {
-		window.preload.setSetting("proxy_url", processInput(urlElement.value))
+		window.preload.setSetting("proxy_url", urlElement.value)
 		window.preload.close()
 	}
 </script>

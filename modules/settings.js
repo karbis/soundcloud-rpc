@@ -12,6 +12,7 @@ let settingsInfo = [
 	{name: "lastFm_secret", type: "string", default: null, internal: true},
 	{name: "lastFm_session", type: "string", default: null, internal: true},
 	{name: "lastFm_scrobbling", type: "boolean", default: false, displayName: "Enable scrobbling", internal: true},
+	{name: "lastFm_correctorData", type: "string", default: '{"artist": {}, "songName": {}}', internal: true},
 	
 	{name: "proxy_url", type: "string", default: null, internal: true},
 	{name: "proxy_enabled", type: "boolean", default: false, displayName: "Proxy enabled", internal: true},

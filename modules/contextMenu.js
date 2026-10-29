@@ -80,6 +80,10 @@ function getSettingsSubMenu() {
 			checked: lastFm.isAccountConnected()
 		},
 		{type: "separator"},
+		{
+			label: "Setup corrector",
+			click: (_, win) => lastFm.promptCorrector(win),
+		},
 		newSetting(getSettingInfo("lastFm_scrobbling"))
 	]})
 	menu.push({label: "Proxy settings", submenu: [

@@ -25,7 +25,7 @@
       "artifactName": "soundcloud-win.${ext}"
     },
     "linux": {
-      "target": "deb",
+      "target": "pacman",
       "icon": "icons/icon.png",
       "artifactName": "soundcloud-linux.${ext}"
     },
