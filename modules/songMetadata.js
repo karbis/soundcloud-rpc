@@ -37,7 +37,7 @@ function getSongMetadata() {
 	imgUrl = imgUrl.substring(5, imgUrl.length - 2)
 	
 	if (!imgUrl.startsWith("http")) {
-		imgUrl = "soundcloud-icon"
+		imgUrl = "default-cover"
 	}
 	
 	let songUrl = new URL(url.href)
