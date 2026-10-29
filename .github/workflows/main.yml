@@ -24,7 +24,7 @@ jobs:
         run: npm ci
 
       - name: Install packages
-        run: sudo apt install libgtk-3-0 libnss3 libxss1 libxtst6 libat-spi2-core
+        run: sudo apt update && sudo apt install libgtk-3-0 libnss3 libxss1 libxtst6 libat-spi2-core
 
       - name: Build Linux package
         run: npm run build-linux
