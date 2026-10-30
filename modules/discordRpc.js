@@ -26,9 +26,7 @@ function getPrefix() {
 	}
 	
 	let walkThroughDir = (dir) => {
-		for (let file of fs.readdirSync(dir, {withFileTypes: true})) {
-			if (prefix) break
-			
+		for (let file of fs.readdirSync(dir, {withFileTypes: true})) {			
 			let fullPath = path.join(dir, file.name)
 			if (file.isDirectory()) {
 				try {
